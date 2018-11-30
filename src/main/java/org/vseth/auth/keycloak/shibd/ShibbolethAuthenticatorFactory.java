@@ -1,8 +1,8 @@
 package org.vseth.auth.keycloak.shibd;
 
 import org.keycloak.Config;
-import org.keycloak.authentication.AuthenticatorFactory;
 import org.keycloak.authentication.Authenticator;
+import org.keycloak.authentication.AuthenticatorFactory;
 import org.keycloak.authentication.ConfigurableAuthenticatorFactory;
 import org.keycloak.models.AuthenticationExecutionModel;
 import org.keycloak.models.KeycloakSession;
@@ -16,6 +16,21 @@ public class ShibbolethAuthenticatorFactory implements AuthenticatorFactory, Con
 
     public static final String PROVIDER_ID = "shibboleth-authenticator";
     private static final ShibbolethAuthenticator SINGLETON = new ShibbolethAuthenticator();
+    private static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
+            AuthenticationExecutionModel.Requirement.DISABLED,
+            AuthenticationExecutionModel.Requirement.OPTIONAL,
+            AuthenticationExecutionModel.Requirement.REQUIRED,
+    };
+    private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
+
+    static {
+        ProviderConfigProperty property = new ProviderConfigProperty();
+        property.setName("email-header");
+        property.setLabel("E-Mail header");
+        property.setType(ProviderConfigProperty.STRING_TYPE);
+        property.setHelpText("The HTTP Header name of the E-Mail address");
+        configProperties.add(property);
+    }
 
     @Override
     public String getId() {
@@ -27,11 +42,6 @@ public class ShibbolethAuthenticatorFactory implements AuthenticatorFactory, Con
         return SINGLETON;
     }
 
-    private static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
-            AuthenticationExecutionModel.Requirement.DISABLED,
-            AuthenticationExecutionModel.Requirement.OPTIONAL,
-            AuthenticationExecutionModel.Requirement.REQUIRED,
-    };
     @Override
     public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
         return REQUIREMENT_CHOICES;
@@ -52,16 +62,6 @@ public class ShibbolethAuthenticatorFactory implements AuthenticatorFactory, Con
         return configProperties;
     }
 
-    private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
-    static {
-        ProviderConfigProperty property = new ProviderConfigProperty();
-        property.setName("email-header");
-        property.setLabel("E-Mail header");
-        property.setType(ProviderConfigProperty.STRING_TYPE);
-        property.setHelpText("The HTTP Header name of the E-Mail address");
-        configProperties.add(property);
-    }
-
     @Override
     public String getDisplayType() {
         return "Shibboleth";
@@ -78,11 +78,14 @@ public class ShibbolethAuthenticatorFactory implements AuthenticatorFactory, Con
     }
 
     @Override
-    public void init(Config.Scope scope) { }
+    public void init(Config.Scope scope) {
+    }
 
     @Override
-    public void postInit(KeycloakSessionFactory sessionFactory) { }
+    public void postInit(KeycloakSessionFactory sessionFactory) {
+    }
 
     @Override
-    public void close() { }
+    public void close() {
+    }
 }
