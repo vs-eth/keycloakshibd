@@ -1,3 +1,6 @@
+/*
+ * Shibboleth authentication via HTTP Headers set by an Apache proxy.
+ */
 package org.vseth.auth.keycloak.shibd;
 
 import org.jboss.logging.Logger;
@@ -52,6 +55,8 @@ public class ShibbolethAuthenticator implements Authenticator {
                 context.failure(AuthenticationFlowError.INTERNAL_ERROR);
                 return;
             }
+            logger.info("Got persistent id: " + persistentId.get());
+
             Optional<UserModel> existingUser = context.getSession().users().getUsers(context.getRealm()).stream().filter(u -> u.getFirstAttribute("persistent-id").equals(persistentId.get())).findFirst();
             if (existingUser.isPresent()) {
                 logger.info("Found existing user: " + existingUser.get().getUsername());
