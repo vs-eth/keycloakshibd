@@ -36,6 +36,7 @@ public class ShibbolethAuthenticator implements Authenticator {
         Optional<String> email = context.getHttpRequest().getHttpHeaders().getRequestHeader("mail").stream().findFirst();
         if (!email.isPresent()) {
             logger.error("No email passed! This should not happen.");
+            return;
         }
         logger.info("Got mail: " + email);
 
@@ -49,6 +50,7 @@ public class ShibbolethAuthenticator implements Authenticator {
             if (!persistentId.isPresent()) {
                 logger.warn("Header `persistent-id` was not passed. This should not happen!");
                 context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+                return;
             }
             Optional<UserModel> existingUser = context.getSession().users().getUsers(context.getRealm()).stream().filter(u -> u.getFirstAttribute("persistent-id").equals(persistentId.get())).findFirst();
             if (existingUser.isPresent()) {
