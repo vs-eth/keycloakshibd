@@ -1,3 +1,3 @@
 # keycloakshibd
 
-Shibbolet authentication for keycloak.
+Shibboleth authentication for keycloak.
