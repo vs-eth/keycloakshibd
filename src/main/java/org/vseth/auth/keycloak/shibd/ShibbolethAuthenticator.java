@@ -1,5 +1,5 @@
 /*
- * Shibboleth authentication via HTTP Headers set by an Apache proxy.
+ * Offers e-mail based Shibboleth authentication via HTTP Headers set by an Apache proxy.
  */
 package org.vseth.auth.keycloak.shibd;
 
