@@ -41,7 +41,7 @@ public class ShibbolethAuthenticator implements Authenticator {
             context.failure(AuthenticationFlowError.INTERNAL_ERROR);
             return;
         }
-        logger.debug("Got mail: " + email);
+        logger.debug("Got mail: " + email.get());
 
         Optional<String> persistentId = context.getHttpRequest().getHttpHeaders().getRequestHeader("persistent-id").stream().findAny();
         if (!persistentId.isPresent()) {
