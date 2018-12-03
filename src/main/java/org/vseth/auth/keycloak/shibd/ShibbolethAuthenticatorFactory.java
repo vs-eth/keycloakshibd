@@ -14,7 +14,7 @@ import java.util.List;
 
 public class ShibbolethAuthenticatorFactory implements AuthenticatorFactory, ConfigurableAuthenticatorFactory {
 
-    public static final String PROVIDER_ID = "shibboleth-authenticator";
+    private static final String PROVIDER_ID = "shibboleth-authenticator";
     private static final ShibbolethAuthenticator SINGLETON = new ShibbolethAuthenticator();
     private static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
             AuthenticationExecutionModel.Requirement.DISABLED,
@@ -22,15 +22,6 @@ public class ShibbolethAuthenticatorFactory implements AuthenticatorFactory, Con
             AuthenticationExecutionModel.Requirement.REQUIRED,
     };
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
-
-    static {
-        ProviderConfigProperty property = new ProviderConfigProperty();
-        property.setName("email-header");
-        property.setLabel("E-Mail header");
-        property.setType(ProviderConfigProperty.STRING_TYPE);
-        property.setHelpText("The HTTP Header name of the E-Mail address");
-        configProperties.add(property);
-    }
 
     @Override
     public String getId() {
