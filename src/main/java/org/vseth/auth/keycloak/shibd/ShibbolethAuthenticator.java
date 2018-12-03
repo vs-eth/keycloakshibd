@@ -33,40 +33,63 @@ public class ShibbolethAuthenticator implements Authenticator {
 
     @Override
     public void authenticate(final AuthenticationFlowContext context) {
-        logger.info("Got authentication request:");
-        context.getHttpRequest().getHttpHeaders().getRequestHeaders().entrySet().forEach(x -> logger.info("  " + x.getKey() + ": " + x.getValue()));
+        logger.debug("Got authentication request");
 
-        Optional<String> email = context.getHttpRequest().getHttpHeaders().getRequestHeader("mail").stream().findFirst();
+        Optional<String> email = context.getHttpRequest().getHttpHeaders().getRequestHeader("mail").stream().findAny();
         if (!email.isPresent()) {
-            logger.error("No email passed! This should not happen.");
+            logger.error("No email header passed. This should not happen!");
+            context.failure(AuthenticationFlowError.INTERNAL_ERROR);
             return;
         }
-        logger.info("Got mail: " + email);
+        logger.debug("Got mail: " + email);
 
+        Optional<String> persistentId = context.getHttpRequest().getHttpHeaders().getRequestHeader("persistent-id").stream().findAny();
+        if (!persistentId.isPresent()) {
+            logger.error("No persistent-id header passed. This should not happen!");
+            context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+            return;
+        }
+        logger.debug("Got persistent id: " + persistentId.get());
+
+        // Try fetching the user by E-Mail address.
+        // This field is indexed and thus querying it is fast. Assuming a user's E-Mail doesn't change often,
+        // even external users can be authenticated quickly like this.
         UserModel user = context.getSession().users().getUserByEmail(email.get(), context.getRealm());
         if (user != null) {
-            logger.info("Found user: " + user.getUsername());
+            logger.debug("Found user by E-Mail: " + user.getUsername());
             context.setUser(user);
             context.success();
         } else {
-            Optional<String> persistentId = context.getHttpRequest().getHttpHeaders().getRequestHeader("persistent-id").stream().findFirst();
-            if (!persistentId.isPresent()) {
-                logger.warn("Header `persistent-id` was not passed. This should not happen!");
-                context.failure(AuthenticationFlowError.INTERNAL_ERROR);
-                return;
-            }
-            logger.info("Got persistent id: " + persistentId.get());
-
-            Optional<UserModel> existingUser = context.getSession().users().getUsers(context.getRealm()).stream().filter(u -> u.getFirstAttribute("persistent-id").equals(persistentId.get())).findFirst();
+            // If we can't find the user by E-Mail we check if there exists a user with the corresponding persistent
+            // id. This is potentially very slow, thus we first check if the provided E-Mail address is already
+            // known to us.
+            Optional<UserModel> existingUser = context.getSession().users().getUsers(context.getRealm()).stream()
+                    .filter(u -> u.getFirstAttribute("persistent-id").equals(persistentId.get())).findAny();
             if (existingUser.isPresent()) {
-                logger.info("Found existing user: " + existingUser.get().getUsername());
+                logger.debug("Found existing user by persistent ID: " + existingUser.get().getUsername());
+                logger.info("Re-setting E-Mail for user " + persistentId.get());
+                existingUser.get().setEmail(email.get());
                 context.setUser(existingUser.get());
                 context.success();
             } else {
                 logger.info("Encountered new user, creating new profile");
-                // create user
-                //UserModel newUser = context.getSession().userStorageManager().addUser(context.getRealm(), persistentId.get());
-                context.failure(AuthenticationFlowError.UNKNOWN_USER);
+                String firstName = context.getHttpRequest().getHttpHeaders().getRequestHeader("givenName").get(0);
+                String lastName = context.getHttpRequest().getHttpHeaders().getRequestHeader("surname").get(0);
+
+                // If the E-Mail address is <name>@<domain>, construct the username as:
+                // ext-user-<name>-<domain>
+                String username = "ext-user-" + email.get().replace("@", "-");
+                UserModel newUser = context.getSession().userStorageManager().addUser(context.getRealm(), username);
+                newUser.setEmail(email.get());
+                newUser.setFirstName(firstName);
+                newUser.setLastName(lastName);
+                newUser.setSingleAttribute("persistent-id", persistentId.get());
+                newUser.setEnabled(true);
+                newUser.setEmailVerified(true);
+
+                logger.info("successfully created user");
+                context.setUser(newUser);
+                context.success();
             }
         }
     }
