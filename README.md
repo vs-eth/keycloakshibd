@@ -49,7 +49,7 @@ Where `<address>` and `<domain>` are taken from the user's E-Mail `<address>@<do
 
 The persistent ID is not a human-friendly identifier for users. While it may guarantee uniqueness
 of usernames, it makes interaction with poorly written software easier by providing a somewhat
-sensible (and human-friendly) value in the `username` field, which can be displayed to the
+sensible (and human-friendly) value in the `username` field, which can be displayed to
 users.
 
 ### Why use the user's E-Mail address for lookup and not his persistent ID?
