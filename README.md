@@ -7,16 +7,19 @@ will extract the users' E-Mail and look him up the user database.
 
 The flow proceeds as follows:
 1. An (unauthenticated) user has to authenticate on the `/protocol/openid-connect/auth` endpoint
-2. The user is redirected to wayf.switch.ch and chooses his home university
+2. The user is redirected to the configured Shibboleth login page and chooses his home organization
+    * In our case, this is `wayf.switch.ch`
 3. The user signs in to his universities' account and is redirected to Keycloak
 
-If a user matching the E-Mail address returned by SwitchAAI is found, he will be authenticated
-to Keycloak. If not, a new user will be created with that E-Mail address, with the following
-username:
+If a user matching the E-Mail address returned by the Shibboleth IdP is found, he will be
+authenticated to Keycloak. If not, the plugin will check the persistent id and whether
+a user with that particular id can be found (this can happen e.g. when a user changes his
+E-Mail address but keeps his Shibboleth profile.). If no user matching the persistent ID is
+found, a new user will be created with the provided E-Mail address and the following username:
 
     ext-user-<address>-<domain>
     
-Where `<address>` and `<domain>` come from the user's E-Mail `<address>@<domain>`.
+Where `<address>` and `<domain>` are taken from the user's E-Mail `<address>@<domain>`.
 
 ## Prerequisites
 
@@ -28,7 +31,8 @@ Where `<address>` and `<domain>` come from the user's E-Mail `<address>@<domain>
         * email
         * persistendId / targetedId (for unique identification of external users)
 * (optional) User Federation via unique E-Mail Addresses
-    * Useful if the authenticated users should automatically be federated
+    * Useful if the authenticated users should automatically be federated (e.g. from
+     the universities' LDAP)
     
 ## Installation
 
@@ -39,10 +43,22 @@ Where `<address>` and `<domain>` come from the user's E-Mail `<address>@<domain>
     * You can choose between `Optional` and `Required`
 * Restart Keycloak (don't know if this is necessary)
 
-## Pitfalls
+## FAQ
 
-This plugin speeds up user lookups via E-Mail addresses - that is, ETH or external users are
-looked up by their E-Mail address first, and if none is found, matched on the known persistent
-IDs, which can lead to shadowing (A person's) ETH AAI account and their eduID-Account can have
-the same E-Mail address. In this case the plugin prioritizes the ETH account, which is expected
-and intended behaviour.
+### Why not use the users persistent IDs as their usernames?
+
+The persistent ID is not a human-friendly identifier for users. While it may guarantee uniqueness
+of usernames, it makes interaction with poorly written software easier by providing a somewhat
+sensible (and human-friendly) value in the `username` field, which can be displayed to the
+users.
+
+### Why use the user's E-Mail address for lookup and not his persistent ID?
+
+Only some fields in keycloak are indexed for fast retrieval, the most commonly used ones being
+the E-Mail address and username, since Keycloak guarantees them to be unique by default. As
+there currently is no way to create a new field on a user with a fast index retrieval without
+messing with the internals we have decided to speed up lookups by first checking the users
+E-Mail addresses before falling back to the persistent ID.
+
+Note that this can lead to shadowing (a person's AAI accounts can map to the same user profile
+in Keycloak if they use the same E-Mail address). This is known and intended behavior.
