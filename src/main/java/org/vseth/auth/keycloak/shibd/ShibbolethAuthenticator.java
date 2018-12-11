@@ -56,7 +56,17 @@ public class ShibbolethAuthenticator implements Authenticator {
         // even external users can be authenticated quickly like this.
         UserModel user = context.getSession().users().getUserByEmail(email.get(), context.getRealm());
         if (user != null) {
+            if (!user.getFirstAttribute("persistent-id").equals(persistentId.get())) {
+                // This case shouldn't happen because in this case there are accounts with identical E-Mails and
+                // two different persistent IDs (which CAN be the case with eduID). In this case we just set whatever
+                // persistent ID we are currently seeing - we do not prefer one ID over the other.
+                logger.warn("The E-Mail of the currently authenticated user (E-Mail: " + email.get() +
+                        ", persistent-id: " + persistentId.get() + ") is already taken by a different user (username " +
+                        user.getUsername() + ", persistent-id: " + user.getFirstAttribute("persistent-id") +
+                        ")! These users" + "will be merged now.");
+            }
             logger.debug("Found user by E-Mail: " + user.getUsername());
+            user.setSingleAttribute("persistent-id", persistentId.get());
             context.setUser(user);
             context.success();
         } else {
