@@ -36,7 +36,8 @@ Where `<address>` and `<domain>` are taken from the user's E-Mail `<address>@<do
     
 ## Installation
 
-* Build the project using `mvn build`
+* Build the project using `mvn build`  
+  or use Maven in a docker: `docker run --rm -it -u $( id -u ) --workdir /build -v $( pwd ):/build -v $HOME/.m2:/var/maven/.m2 -e MAVEN_CONFIG=/var/maven/.m2 maven /bin/bash` und im docker dann `mvn -Dtycho.disableP2Mirrors=true -Dmaven.antrun.skip=true -Dmaven.repo.local=/var/maven/.m2 clean verify`.
 * Put the generated jar in the `/standalone/deployments/` (resp. `/standalone-ha/deployments/`)
   folder of your keycloak installation
 * Configure the `Shibboleth` execution flow as Authentication requirement for type `Browser`
