@@ -17,9 +17,9 @@ public class ShibbolethAuthenticatorFactory implements AuthenticatorFactory, Con
     private static final String PROVIDER_ID = "shibboleth-authenticator";
     private static final ShibbolethAuthenticator SINGLETON = new ShibbolethAuthenticator();
     private static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
-            AuthenticationExecutionModel.Requirement.DISABLED,
-            AuthenticationExecutionModel.Requirement.OPTIONAL,
-            AuthenticationExecutionModel.Requirement.REQUIRED,
+   	   AuthenticationExecutionModel.Requirement.REQUIRED,
+	   AuthenticationExecutionModel.Requirement.ALTERNATIVE,
+           AuthenticationExecutionModel.Requirement.DISABLED
     };
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
 
